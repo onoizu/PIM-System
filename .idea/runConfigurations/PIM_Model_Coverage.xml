@@ -1,0 +1,20 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="PIM Model Coverage" type="JUnit" factoryName="JUnit">
+    <module name="PIM" />
+    <extension name="coverage" runner="jacoco">
+      <pattern>
+        <option name="PATTERN" value="model.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <option name="TEST_OBJECT" value="pattern" />
+    <patterns>
+      <pattern testClass="tests.RecordTests" />
+      <pattern testClass="tests.CriteriaTests" />
+      <pattern testClass="tests.StorageTests" />
+    </patterns>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
