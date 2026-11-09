@@ -95,6 +95,7 @@ public final class ConsoleView {
                   save "<path.pim>"
                   load "<path.pim>"
                   help
+                  help search
                   exit
 
                 Search by type, text contains, or time <, >, and =.
@@ -103,6 +104,22 @@ public final class ConsoleView {
                 Text matching is case-sensitive. Times use uuuu-MM-dd HH:mm.
                 """);
         output.println("Use \\\" for a quote and \\\\ for a backslash inside quoted values.");
+    }
+
+    public void showSearchHelp() {
+        output.print("""
+                Find records with search <expression>
+
+                  search type = note && text contains "project"
+                  search type = task && deadline < "2026-11-20 20:00"
+                  search type = event && !(description contains "cancelled")
+
+                Time comparisons use <, > or =. Enter times as "uuuu-MM-dd HH:mm".
+                Text matching is case-sensitive.
+                Use parentheses to group conditions. Precedence is !, then &&, then ||.
+                A comparison is false when a record has no such field.
+                Use a type check to limit a negated comparison to one record type.
+                """);
     }
 
     private void showField(FieldName field, String value) {
@@ -114,6 +131,7 @@ public final class ConsoleView {
             return Optional.empty();
         }
         output.print(prompt);
+        // The prompt has no newline. Show it before waiting for input.
         output.flush();
         try {
             String line = input.readLine();

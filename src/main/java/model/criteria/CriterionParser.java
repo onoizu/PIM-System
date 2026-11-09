@@ -1,7 +1,11 @@
 package model.criteria;
 
-import java.util.ArrayList;
+import static model.criteria.CriterionLexer.atPosition;
+import static model.criteria.CriterionLexer.error;
+
 import java.util.List;
+import model.criteria.CriterionLexer.Kind;
+import model.criteria.CriterionLexer.Token;
 import model.exceptions.CriterionParseException;
 import model.exceptions.ValidationException;
 import model.records.FieldName;
@@ -11,9 +15,9 @@ import model.records.RecordType;
 /** Turns a search expression into a criterion the record book can evaluate. */
 public final class CriterionParser {
     private static final int MAX_EXPRESSION_LENGTH = 4096;
-    private static final int MAX_TOKENS = 256;
     private static final int MAX_DEPTH = 32;
 
+    /** Check the input length, then build a condition tree from the tokens. */
     public Criterion parse(String expression) throws CriterionParseException {
         if (expression == null) {
             throw error(0, "An expression is required.");
@@ -22,108 +26,8 @@ public final class CriterionParser {
             throw error(MAX_EXPRESSION_LENGTH,
                     "Expression exceeds " + MAX_EXPRESSION_LENGTH + " UTF-16 code units.");
         }
-        return new Parser(new Lexer(expression).tokenize()).parse();
-    }
-
-    private static CriterionParseException error(int offset, String reason) {
-        return new CriterionParseException(atPosition(offset, reason));
-    }
-
-    private static String atPosition(int offset, String reason) {
-        return "Position " + (offset + 1) + ": " + reason;
-    }
-
-    private enum Kind {
-        WORD, QUOTED, EQUAL, LESS, GREATER, AND, OR, NOT, OPEN, CLOSE, END
-    }
-
-    private record Token(Kind kind, String text, int offset) {
-    }
-
-    private static final class Lexer {
-        private final String expression;
-        private int offset;
-
-        private Lexer(String expression) {
-            this.expression = expression;
-        }
-
-        private List<Token> tokenize() throws CriterionParseException {
-            List<Token> tokens = new ArrayList<>();
-            while (offset < expression.length()) {
-                if (Character.isWhitespace(expression.charAt(offset))) {
-                    offset++;
-                    continue;
-                }
-                if (tokens.size() == MAX_TOKENS) {
-                    throw error(offset, "Expression exceeds " + MAX_TOKENS + " tokens.");
-                }
-                tokens.add(nextToken());
-            }
-            tokens.add(new Token(Kind.END, "", offset));
-            return tokens;
-        }
-
-        private Token nextToken() throws CriterionParseException {
-            int start = offset;
-            char first = expression.charAt(offset++);
-            if (isWordCharacter(first)) {
-                while (offset < expression.length()
-                        && isWordCharacter(expression.charAt(offset))) {
-                    offset++;
-                }
-                return new Token(Kind.WORD, expression.substring(start, offset), start);
-            }
-            if (first == '"') {
-                return readQuoted(start);
-            }
-
-            Kind kind = switch (first) {
-                case '=' -> Kind.EQUAL;
-                case '<' -> Kind.LESS;
-                case '>' -> Kind.GREATER;
-                case '!' -> Kind.NOT;
-                case '(' -> Kind.OPEN;
-                case ')' -> Kind.CLOSE;
-                case '&', '|' -> readBooleanOperator(first, start);
-                default -> throw error(start, "Unexpected character '" + first + "'.");
-            };
-            return new Token(kind, expression.substring(start, offset), start);
-        }
-
-        private Kind readBooleanOperator(char first, int start) throws CriterionParseException {
-            if (offset >= expression.length() || expression.charAt(offset) != first) {
-                throw error(start, "Use '" + first + first + "' for a Boolean operator.");
-            }
-            offset++;
-            return first == '&' ? Kind.AND : Kind.OR;
-        }
-
-        private Token readQuoted(int start) throws CriterionParseException {
-            StringBuilder value = new StringBuilder();
-            while (offset < expression.length()) {
-                char character = expression.charAt(offset++);
-                if (character == '"') {
-                    return new Token(Kind.QUOTED, value.toString(), start);
-                }
-                if (character == '\\') {
-                    int escapeOffset = offset - 1;
-                    if (offset == expression.length()) {
-                        throw error(escapeOffset, "Incomplete escape in quoted value.");
-                    }
-                    character = expression.charAt(offset++);
-                    if (character != '"' && character != '\\') {
-                        throw error(escapeOffset, "Only quotes and backslashes can be escaped.");
-                    }
-                }
-                value.append(character);
-            }
-            throw error(start, "Unterminated quoted value.");
-        }
-
-        private static boolean isWordCharacter(char character) {
-            return Character.isLetterOrDigit(character) || character == '_';
-        }
+        List<Token> tokens = new CriterionLexer(expression).tokenize();
+        return new Parser(tokens).parse();
     }
 
     private static final class Parser {
@@ -134,19 +38,20 @@ public final class CriterionParser {
             this.tokens = tokens;
         }
 
+        // Require the whole input to form a single expression.
         private Criterion parse() throws CriterionParseException {
             try {
                 Criterion result = parseOr(0);
                 expect(Kind.END, "Unexpected token after the expression.");
                 return result;
             } catch (ValidationException exception) {
-                // Predicate validation follows consumption of its value.
+                // A rejected value has already been consumed, so point to the previous token.
                 int offset = tokens.get(index - 1).offset();
                 throw new CriterionParseException(atPosition(offset, exception.getMessage()), exception);
             }
         }
 
-        // Parse OR last by letting each operand consume its AND expressions first.
+        // Each OR operand may be a complete AND expression.
         private Criterion parseOr(int depth) throws CriterionParseException, ValidationException {
             Criterion result = parseAnd(depth);
             while (accept(Kind.OR)) {
@@ -155,6 +60,7 @@ public final class CriterionParser {
             return result;
         }
 
+        // Parse negations and groups before joining them with AND.
         private Criterion parseAnd(int depth) throws CriterionParseException, ValidationException {
             Criterion result = parseUnary(depth);
             while (accept(Kind.AND)) {
@@ -163,6 +69,7 @@ public final class CriterionParser {
             return result;
         }
 
+        // NOT and parentheses add one nesting level. A group restarts at OR.
         private Criterion parseUnary(int depth) throws CriterionParseException, ValidationException {
             if (depth > MAX_DEPTH) {
                 throw error(tokens.get(index - 1).offset(),
@@ -179,6 +86,7 @@ public final class CriterionParser {
             return parsePredicate();
         }
 
+        // The field determines which operator and value are allowed.
         private Criterion parsePredicate() throws CriterionParseException, ValidationException {
             Token name = expect(Kind.WORD, "Expected a field name.");
             if (name.text().equals("type")) {
@@ -206,6 +114,7 @@ public final class CriterionParser {
             return new TimeCriterion(field, operator, RecordTime.parse(value.text()));
         }
 
+        // Time comparisons accept only the three single-character operators.
         private TimeOperator parseTimeOperator() throws CriterionParseException {
             Token token = tokens.get(index);
             TimeOperator operator = switch (token.kind()) {
@@ -218,6 +127,7 @@ public final class CriterionParser {
             return operator;
         }
 
+        // Consume a required token or report where it was expected.
         private Token expect(Kind kind, String reason) throws CriterionParseException {
             Token token = tokens.get(index);
             if (!accept(kind)) {
@@ -226,6 +136,7 @@ public final class CriterionParser {
             return token;
         }
 
+        // Leave the cursor in place when the optional token is absent.
         private boolean accept(Kind kind) {
             if (tokens.get(index).kind() != kind) {
                 return false;

@@ -3,6 +3,7 @@ package model.records;
 import java.util.Optional;
 import model.exceptions.ValidationException;
 
+/** An immutable plain-text note that keeps the user's spacing. */
 public final class Note extends PIR {
     private final String text;
 

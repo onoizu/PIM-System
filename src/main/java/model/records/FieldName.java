@@ -3,6 +3,7 @@ package model.records;
 import java.util.Locale;
 import java.util.Optional;
 
+/** Classifies the field names used by commands, search and record output. */
 public enum FieldName {
     TEXT(true),
     DESCRIPTION(true),
@@ -18,6 +19,7 @@ public enum FieldName {
 
     FieldName(boolean text) {
         this.text = text;
+        // Use the same command spelling regardless of the system locale.
         this.commandName = name().toLowerCase(Locale.ROOT);
     }
 
@@ -33,6 +35,7 @@ public enum FieldName {
         return commandName;
     }
 
+    /** Look up a field by its case-sensitive command name. */
     public static Optional<FieldName> fromCommandName(String name) {
         for (FieldName field : values()) {
             if (field.commandName.equals(name)) {

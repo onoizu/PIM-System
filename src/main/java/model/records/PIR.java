@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import model.exceptions.ValidationException;
 
+/** Shared identity and field access for all personal information records. */
 public abstract sealed class PIR permits Note, Task, Event, Contact {
     private final long id;
     private final RecordType type;
@@ -27,12 +28,15 @@ public abstract sealed class PIR permits Note, Task, Event, Contact {
         return type;
     }
 
+    /** Return an empty result if this record has no text value for the field. */
     public abstract Optional<String> getTextField(FieldName field);
 
+    /** Subclasses with time fields override this method for search and display. */
     public Optional<LocalDateTime> getTimeField(FieldName field) {
         return Optional.empty();
     }
 
+    // Validate the text while keeping the original spacing.
     static String requireText(FieldName field, String value) throws ValidationException {
         if (value == null || value.isBlank()) {
             throw new ValidationException("Field '" + field.commandName() + "' must not be blank.");
@@ -49,7 +53,7 @@ public abstract sealed class PIR permits Note, Task, Event, Contact {
                 throw new ValidationException("Field '" + field.commandName()
                         + "' must contain valid Unicode text.");
             }
-            index++;
+            index++; // The low surrogate has already been checked.
         }
         return value;
     }

@@ -8,10 +8,13 @@ import java.util.Set;
 import model.exceptions.ValidationException;
 import model.records.PIR;
 
+/** A validated, read-only collection state for saving and loading. */
 public final class RecordSnapshot {
     private final List<PIR> records;
+    // Keep the allocation history even if the highest record ID was deleted.
     private final long nextId;
 
+    /** Validate the IDs and take a copy of the list. */
     public RecordSnapshot(List<PIR> records, long nextId) throws ValidationException {
         if (records == null) {
             throw new ValidationException("Snapshot records are required.");
@@ -20,6 +23,7 @@ public final class RecordSnapshot {
             throw new ValidationException("The next record ID must be positive.");
         }
 
+        // The records are immutable, so only the list needs to be copied.
         List<PIR> copy = new ArrayList<>(records.size());
         Set<Long> seenIds = new HashSet<>();
         for (PIR record : records) {
@@ -27,6 +31,7 @@ public final class RecordSnapshot {
                 throw new ValidationException("A snapshot cannot contain a null record.");
             }
             long id = record.getId();
+            // Gaps are allowed, but the next ID must be above every stored ID.
             if (id <= 0 || id >= nextId) {
                 throw new ValidationException("Snapshot record ID " + id
                         + " must be positive and less than the next record ID.");

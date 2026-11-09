@@ -39,6 +39,7 @@ public final class CommandParser {
             FieldName field = FieldName.fromCommandName(name)
                     .orElseThrow(() -> new CommandParseException("Unknown or read-only field: " + name));
             cursor.expect('=', "Expected '=' immediately after the field name.");
+            // Spaces inside the quotes belong to the value.
             String value = cursor.readQuoted();
             if (fields.putIfAbsent(field, value) != null) {
                 throw new CommandParseException("Duplicate field: " + name);

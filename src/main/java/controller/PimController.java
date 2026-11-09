@@ -73,6 +73,7 @@ public final class PimController {
             case CREATE -> create(body);
             case UPDATE -> update(body);
             case SEARCH -> {
+                // Keep trailing spaces so error positions refer to the full expression.
                 Criterion criterion = criterionParser.parse(command.getBody());
                 view.showRecords(book.search(criterion));
             }
@@ -80,10 +81,7 @@ public final class PimController {
             case DELETE -> delete(body);
             case SAVE -> save(body);
             case LOAD -> load(body);
-            case HELP -> {
-                requireNoArguments(body, "help");
-                view.showHelp();
-            }
+            case HELP -> help(body);
             case EXIT -> {
                 requireNoArguments(body, "exit");
                 exit();
@@ -107,6 +105,7 @@ public final class PimController {
         long id = parseId(body.substring(0, end));
         Map<FieldName, String> changes = commandParser.parseFields(body.substring(end));
         book.update(id, changes);
+        // A successful update counts as an edit even when the values are the same.
         dirty = true;
         view.showMessage("Updated record " + id + ". Unsaved changes.");
     }
@@ -114,8 +113,13 @@ public final class PimController {
     private void print(String body) throws PimException {
         if ("all".equals(body)) {
             view.showRecords(book.getAll());
-        } else {
+            return;
+        }
+        try {
             view.showRecord(book.get(parseId(body)));
+        } catch (CommandParseException failure) {
+            throw new CommandParseException(
+                    failure.getMessage() + " Use print <id> or print all. Example: print 1.", failure);
         }
     }
 
@@ -147,6 +151,14 @@ public final class PimController {
         book.replaceState(storage.load(path));
         dirty = false;
         view.showMessage("Loaded from " + path + ".");
+    }
+
+    private void help(String topic) throws CommandParseException {
+        switch (topic) {
+            case "" -> view.showHelp();
+            case "search" -> view.showSearchHelp();
+            default -> throw new CommandParseException("Use help or help search.");
+        }
     }
 
     private void exit() throws CommandParseException {

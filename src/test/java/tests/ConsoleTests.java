@@ -183,7 +183,7 @@ public final class ConsoleTests {
         assertEquals("Keep me", ((Note) book.get(1)).getText());
     }
 
-    // CLI creates, displays and deletes all supported record types.
+    // CLI record commands and help topics work in the same session.
     @Test
     public void createPrintDelete() {
         RecordBook book = new RecordBook();
@@ -197,12 +197,24 @@ public final class ConsoleTests {
                 print 2
                 print 18446744073709551615
                 print 3 extra
+                print <1>
+                print 1
                 help
+                help search
+                help search extra
                 exit
                 yes
                 """);
         contains(transcript, "4 matching records:", "type: note", "type: task", "type: event", "type: contact",
-                "mobile: +00123", "Deleted record 2.", "Error:", "record ID is too large", "Commands");
+                "mobile: +00123", "Deleted record 2.", "Error: Record not found: 2", "Commands",
+                "Error: The record ID is too large. Use print <id> or print all. Example: print 1.",
+                "Error: Expected one positive decimal record ID. Use print <id> or print all. Example: print 1.",
+                "pim>   id: 1\n  type: note\n  text: Quick note");
+        contains(transcript, "  help search", "Find records with search <expression>",
+                "search type = note && text contains \"project\"",
+                "search type = task && deadline < \"2026-11-20 20:00\"",
+                "search type = event && !(description contains \"cancelled\")",
+                "Error: Use help or help search.");
         assertEquals(List.of(1L, 3L, 4L), book.getAll().stream().map(record -> record.getId()).toList());
     }
 

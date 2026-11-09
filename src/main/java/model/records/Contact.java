@@ -3,6 +3,7 @@ package model.records;
 import java.util.Optional;
 import model.exceptions.ValidationException;
 
+/** Stores the mobile number as text to preserve leading zeroes and the plus sign. */
 public final class Contact extends PIR {
     private final String name;
     private final String address;

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import model.exceptions.ValidationException;
 
+/** An immutable calendar event with a stored alarm time. */
 public final class Event extends PIR {
     private final String description;
     private final LocalDateTime start;
@@ -15,6 +16,7 @@ public final class Event extends PIR {
         this.description = requireText(FieldName.DESCRIPTION, description);
         this.start = RecordTime.requireMinute(start);
         this.alarm = RecordTime.requireMinute(alarm);
+        // An alarm at the same minute as the start is valid.
         if (this.alarm.isAfter(this.start)) {
             throw new ValidationException("The alarm must be at or before the event start.");
         }

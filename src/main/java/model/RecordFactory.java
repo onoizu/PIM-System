@@ -12,10 +12,12 @@ import model.records.RecordTime;
 import model.records.RecordType;
 import model.records.Task;
 
+/** Builds immutable records from the field values supplied by the caller. */
 public final class RecordFactory {
     private RecordFactory() {
     }
 
+    // Create a record  after checking that every required field is supplied
     public static PIR create(long id, RecordType type, Map<FieldName, String> fields)
             throws ValidationException {
         if (type == null) {
@@ -30,6 +32,7 @@ public final class RecordFactory {
         return buildRecord(id, type, fields, null);
     }
 
+    // Build a replacement with the same ID and type, keeping any omitted fields
     public static PIR updated(PIR original, Map<FieldName, String> changes)
             throws ValidationException {
         if (original == null) {
@@ -43,6 +46,7 @@ public final class RecordFactory {
         return buildRecord(original.getId(), type, changes, original);
     }
 
+    // Check which fields were supplied. The constructors validate the completed record.
     private static void validateFields(RecordType type, Map<FieldName, String> fields)
             throws ValidationException {
         if (fields == null) {
@@ -64,6 +68,7 @@ public final class RecordFactory {
         }
     }
 
+    // Use the same constructors for new and updated records.
     private static PIR buildRecord(long id, RecordType type, Map<FieldName, String> fields,
                                    PIR original) throws ValidationException {
         return switch (type) {
@@ -82,7 +87,7 @@ public final class RecordFactory {
         };
     }
 
-    // Creation supplies every field. Updates use the original for omitted fields.
+    // Creation supplies every field, Updates use the original for omitted fields
     private static String textValue(Map<FieldName, String> fields, PIR original, FieldName field) {
         if (fields.containsKey(field)) {
             return fields.get(field);
@@ -96,6 +101,7 @@ public final class RecordFactory {
             try {
                 return RecordTime.parse(fields.get(field));
             } catch (ValidationException error) {
+                // Name the field so the user knows which time to fix.
                 throw new ValidationException(field.commandName() + ": " + error.getMessage(), error);
             }
         }

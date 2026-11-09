@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import model.exceptions.ValidationException;
 
+/** An immutable to-do item with a deadline stored to minute precision. */
 public final class Task extends PIR {
     private final String description;
     private final LocalDateTime deadline;

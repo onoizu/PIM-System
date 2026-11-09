@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 import model.exceptions.ValidationException;
 
+/** Keeps time parsing and formatting consistent across commands and saved files. */
 public final class RecordTime {
     private static final String TIME_PATTERN = "uuuu-MM-dd HH:mm";
     private static final Pattern TIME_SHAPE = Pattern.compile(
@@ -19,6 +20,7 @@ public final class RecordTime {
     private RecordTime() {
     }
 
+    /** Check the input shape first, then validate the calendar date and time. */
     public static LocalDateTime parse(String text) throws ValidationException {
         if (text == null || !TIME_SHAPE.matcher(text).matches()) {
             throw new ValidationException("Time must use the format " + TIME_PATTERN + ".");
@@ -34,6 +36,7 @@ public final class RecordTime {
         return FORMATTER.format(time);
     }
 
+    /** Check that a time can be saved and read back at the same precision. */
     public static LocalDateTime requireMinute(LocalDateTime time) throws ValidationException {
         if (time == null || time.getSecond() != 0 || time.getNano() != 0
                 || time.getYear() < 0 || time.getYear() > 9999) {

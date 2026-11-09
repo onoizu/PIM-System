@@ -26,7 +26,7 @@ public final class RecordBook {
         if (nextId == Long.MAX_VALUE) {
             throw new ValidationException("No more record IDs are available.");
         }
-        // A rejected record does not use up an ID.
+
         PIR record = RecordFactory.create(nextId, type, fields);
         recordsById.put(nextId, record);
         nextId++;
@@ -41,6 +41,7 @@ public final class RecordBook {
         return record;
     }
 
+    //Return a read-only list in ID order for display
     public List<PIR> getAll() {
         List<PIR> records = new ArrayList<>(recordsById.values());
         records.sort(BY_ID);
@@ -55,12 +56,14 @@ public final class RecordBook {
         return replacement;
     }
 
+    // Remove one record without rolling back the collections ID counter
     public void delete(long id) throws RecordNotFoundException {
         if (recordsById.remove(id) == null) {
             throw new RecordNotFoundException("Record not found: " + id);
         }
     }
 
+    //Filter the active records, then sort only the matches.
     public List<PIR> search(Criterion criterion) {
         Objects.requireNonNull(criterion, "criterion");
         List<PIR> matches = new ArrayList<>();
@@ -73,12 +76,15 @@ public final class RecordBook {
         return Collections.unmodifiableList(matches);
     }
 
+    // Capture the current records and ID counter for saving.
     public RecordSnapshot snapshot() throws ValidationException {
         return new RecordSnapshot(new ArrayList<>(recordsById.values()), nextId);
     }
 
+    //Install the records and ID counter from a validated snapshot.
     public void replaceState(RecordSnapshot snapshot) {
         Objects.requireNonNull(snapshot, "snapshot");
+        // Prepare the new map before replacing the active collection.
         Map<Long, PIR> replacement = new HashMap<>();
         for (PIR record : snapshot.getRecords()) {
             replacement.put(record.getId(), record);
