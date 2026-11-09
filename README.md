@@ -1,4 +1,4 @@
-# COMP3211 Group 44 — Personal Information Manager
+# COMP3211 — Personal Information Manager
 
 A local command-line PIM following the Group 44 design. The application uses
 only the Java standard library. The build targets Java 17.
