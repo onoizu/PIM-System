@@ -10,6 +10,7 @@ import model.exceptions.ValidationException;
 
 /** Keeps time parsing and formatting consistent across commands and saved files. */
 public final class RecordTime {
+    // Keep strict parsing compatible with the supported year 0000.
     private static final String TIME_PATTERN = "uuuu-MM-dd HH:mm";
     private static final Pattern TIME_SHAPE = Pattern.compile(
             "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}");
@@ -23,7 +24,7 @@ public final class RecordTime {
     /** Check the input shape first, then validate the calendar date and time. */
     public static LocalDateTime parse(String text) throws ValidationException {
         if (text == null || !TIME_SHAPE.matcher(text).matches()) {
-            throw new ValidationException("Time must use the format " + TIME_PATTERN + ".");
+            throw new ValidationException("Time must use the format yyyy-MM-dd HH:mm.");
         }
         try {
             return LocalDateTime.parse(text, FORMATTER);

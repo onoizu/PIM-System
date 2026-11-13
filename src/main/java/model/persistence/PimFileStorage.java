@@ -38,6 +38,7 @@ public final class PimFileStorage {
         try {
             Path target = path.toAbsolutePath();
             checkSaveTarget(target);
+
             // Keep the temporary file on the same filesystem for an atomic move when supported.
             temporary = Files.createTempFile(target.getParent(), ".pim-", ".tmp");
             writeSnapshot(temporary, snapshot);
@@ -97,7 +98,7 @@ public final class PimFileStorage {
                 throw new IOException("The destination must be a regular file.");
             }
         } catch (NoSuchFileException exception) {
-            // A new destination is allowed.
+            // a new destination is allowed.
         }
     }
 

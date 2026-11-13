@@ -211,6 +211,10 @@ public final class ConsoleTests {
                 "Error: Expected one positive decimal record ID. Use print <id> or print all. Example: print 1.",
                 "pim>   id: 1\n  type: note\n  text: Quick note");
         contains(transcript, "  help search", "Find records with search <expression>",
+                "Type help search for supported fields and more search examples.",
+                "Record types: note, task, event, contact.",
+                "Text fields: text, description, name, address, mobile.",
+                "Time fields: deadline, start, alarm.",
                 "search type = note && text contains \"project\"",
                 "search type = task && deadline < \"2026-11-20 20:00\"",
                 "search type = event && !(description contains \"cancelled\")",

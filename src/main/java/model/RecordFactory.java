@@ -17,6 +17,7 @@ public final class RecordFactory {
     private RecordFactory() {
     }
 
+
     // Create a record  after checking that every required field is supplied
     public static PIR create(long id, RecordType type, Map<FieldName, String> fields)
             throws ValidationException {
@@ -31,6 +32,8 @@ public final class RecordFactory {
         }
         return buildRecord(id, type, fields, null);
     }
+
+
 
     // Build a replacement with the same ID and type, keeping any omitted fields
     public static PIR updated(PIR original, Map<FieldName, String> changes)

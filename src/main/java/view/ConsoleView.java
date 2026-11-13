@@ -101,7 +101,8 @@ public final class ConsoleView {
                 Search by type, text contains, or time <, >, and =.
                 Use parentheses, !, &&, and || in descending precedence.
                 Example: search type = event && description contains "consultation"
-                Text matching is case-sensitive. Times use uuuu-MM-dd HH:mm.
+                Text matching is case-sensitive. Times use yyyy-MM-dd HH:mm.
+                Type help search for supported fields and more search examples.
                 """);
         output.println("Use \\\" for a quote and \\\\ for a backslash inside quoted values.");
     }
@@ -110,11 +111,15 @@ public final class ConsoleView {
         output.print("""
                 Find records with search <expression>
 
+                Record types: note, task, event, contact.
+                Text fields: text, description, name, address, mobile.
+                Time fields: deadline, start, alarm.
+
                   search type = note && text contains "project"
                   search type = task && deadline < "2026-11-20 20:00"
                   search type = event && !(description contains "cancelled")
 
-                Time comparisons use <, > or =. Enter times as "uuuu-MM-dd HH:mm".
+                Time comparisons use <, > or =. Enter times as "yyyy-MM-dd HH:mm".
                 Text matching is case-sensitive.
                 Use parentheses to group conditions. Precedence is !, then &&, then ||.
                 A comparison is false when a record has no such field.

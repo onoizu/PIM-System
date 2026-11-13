@@ -104,7 +104,9 @@ public final class PimController {
         int end = CommandParser.wordEnd(body);
         long id = parseId(body.substring(0, end));
         Map<FieldName, String> changes = commandParser.parseFields(body.substring(end));
+
         book.update(id, changes);
+
         // A successful update counts as an edit even when the values are the same.
         dirty = true;
         view.showMessage("Updated record " + id + ". Unsaved changes.");
@@ -147,6 +149,7 @@ public final class PimController {
             view.showMessage("Load cancelled.");
             return;
         }
+
         // Keep the current book until the whole file has been validated.
         book.replaceState(storage.load(path));
         dirty = false;
@@ -170,6 +173,7 @@ public final class PimController {
     }
 
     private boolean confirmationDeclined(String prompt) throws CommandParseException {
+
         try {
             return !view.confirm(prompt);
         } catch (IOException failure) {
@@ -187,6 +191,7 @@ public final class PimController {
     private Path parsePimPath(String body) throws CommandParseException {
         String argument = commandParser.parseFileArgument(body);
         Path path;
+
         try {
             path = Path.of(argument);
         } catch (InvalidPathException failure) {
@@ -199,6 +204,8 @@ public final class PimController {
     }
 
     private static boolean targetExists(Path path) throws StorageException {
+
+
         try {
             // An unreadable path must not be treated as a new file.
             Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
@@ -225,6 +232,7 @@ public final class PimController {
             throw new CommandParseException("The record ID is too large.", failure);
         }
     }
+
 
     private static void requireNoArguments(String body, String command) throws CommandParseException {
         if (!body.isEmpty()) {
