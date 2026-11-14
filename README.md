@@ -44,31 +44,3 @@ scans the collection, and sorts only the matching records. Loading validates a
 candidate snapshot before installing it. Save writes a sibling temporary file
 before replacing the destination.
 
-## Course submission assembly
-
-The project brief requires one ZIP for the group. Suggested layout:
-
-    Group44.zip
-    ├── Honour-Declaration.pdf
-    ├── SRS.pdf
-    ├── PIM/
-    │   ├── src/
-    │   ├── scripts/
-    │   ├── lib/test/
-    │   ├── docs/
-    │   │   ├── Design-Document.pdf
-    │   │   ├── Developer-Manual.pdf
-    │   │   └── User-Manual.pdf
-    │   ├── Requirements-Coverage.pdf
-    │   ├── Model-Line-Coverage.pdf
-    │   └── README.md
-    ├── Demo.mp4
-    └── Presentation/
-        ├── Slides.pdf
-        └── Recording.mp4
-
-Exclude generated build/ and out/ directories. The team supplies the final
-SRS, demonstration, presentation, and completed declaration. Update the
-requirements coverage report with the final SRS identifiers before submission.
-Record the GenAI assistance used for code, tests, and documents in the group's
-declaration.
