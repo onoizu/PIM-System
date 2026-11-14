@@ -17,6 +17,8 @@ At the prompt, enter:
     save "notes.pim"
     exit
 
+
+
 Run all JUnit 4.13.1 tests with `./scripts/test.sh`. The test dependencies
 are bundled in `lib/test/` for offline use. The script runs the model tests
 and CLI tests separately.
