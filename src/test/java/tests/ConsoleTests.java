@@ -67,7 +67,7 @@ public final class ConsoleTests {
                     yes
                     print 23
                     exit
-                    """.formatted(initial, saved, saved));
+                    """.formatted(commandPath(initial), commandPath(saved), commandPath(saved)));
             contains(transcript, "1 matching record:", "start: 2026-11-16 14:00", "No matching records.",
                     "Updated record 23. Unsaved changes.", "Error:", "Discard unsaved changes and load?",
                     "description: COMP3211 project consultation", "start: 2026-11-18 16:00",
@@ -86,7 +86,7 @@ public final class ConsoleTests {
                     create note text="New after reload"
                     exit
                     y
-                    """.formatted(saved));
+                    """.formatted(commandPath(saved)));
             contains(restored, "2 matching records:", "Created record 24.");
             assertEquals(event.getStart(), ((Event) fresh.get(23)).getStart());
         } finally {
@@ -116,7 +116,7 @@ public final class ConsoleTests {
                     print 1
                     exit
                     YES
-                    """.formatted(path, path, path));
+                    """.formatted(commandPath(path), commandPath(path), commandPath(path)));
             contains(transcript, "Overwrite the existing file?", "Save cancelled.",
                     "Discard unsaved changes and load?", "Load cancelled.", "Exit cancelled.", "text: Saved");
             assertEquals(original, Files.readString(path));
@@ -142,7 +142,7 @@ public final class ConsoleTests {
                     print 1
                     exit
                     yes
-                    """.formatted(path));
+                    """.formatted(commandPath(path)));
             contains(transcript, "Error:", "line 4", "text: Keep me", "Exit and discard unsaved changes?");
             assertEquals(2L, book.snapshot().getNextId());
             assertEquals(invalid, Files.readString(path));
@@ -164,7 +164,7 @@ public final class ConsoleTests {
                     print 1
                     exit
                     yes
-                    """.formatted(target));
+                    """.formatted(commandPath(target)));
             contains(transcript, "Error:", "text: Keep me", "Exit and discard unsaved changes?");
             assertFalse("A failed save created the target", Files.exists(target));
             assertEquals(2L, book.snapshot().getNextId());
@@ -222,6 +222,11 @@ public final class ConsoleTests {
         assertEquals(List.of(1L, 3L, 4L), book.getAll().stream().map(record -> record.getId()).toList());
     }
 
+    // Escape filesystem paths for the CLI quoted-value grammar on all platforms.
+    private static String commandPath(Path path) {
+        return path.toString().replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
     private static String run(RecordBook book, String commands) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         try (PrintStream output = new PrintStream(bytes, true, StandardCharsets.UTF_8)) {
@@ -229,7 +234,7 @@ public final class ConsoleTests {
             new PimController(book, new CriterionParser(), new PimFileStorage(), new CommandParser(),
                     new ConsoleView(input, output)).run();
         }
-        return bytes.toString(StandardCharsets.UTF_8);
+        return bytes.toString(StandardCharsets.UTF_8).replace("\r\n", "\n");
     }
 
     private static void contains(String transcript, String... fragments) {
